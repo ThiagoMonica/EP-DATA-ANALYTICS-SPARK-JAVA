@@ -1,10 +1,11 @@
 from pyspark.context import SparkContext
+from pyspark.sql import column
 from pyspark.sql.session import SparkSession
 from py4j.java_gateway import JavaGateway
 
 
 # A implementar:
-# [] demais variaveis presentes nos aquivos (por enquanto so tem 2 DEWP e TEMP)
+# [] demais variaveis presentes nos aquivos (por enquanto so tem 2 DEWP e TEMP) - OK
 # [] Filtro de intervalo de datas na tabela a ser filtrada
 # [] Grafico todo maluco ( isso fudeu pq eu n faco a menor ideia)
 # [] Como o resultado sera agrupado ( dias, meses, anos) ?
@@ -29,16 +30,17 @@ df = spark.read.format(file_type) \
   .option("header", first_row_is_header) \
   .option("sep", delimiter) \
   .load(file_location)
-# df.show()
+
+def menuInformacao():
+	#print(df.schema.names[2])
+	i = -1
+	for col in df.dtypes:
+		i=i+1
+		print(str(i) + " \t " + col[0] + " (" + col[1] + ")")
 
 # Funcao para saber o nome do tipo da informacao escolhido
 def tipoInformacao(numero):
-  if(numero  == "1"):
-  	return "DEWP"
-  elif(numero  == "2"):
-  	return "TEMP"
-  else:
-  	return
+  return df.schema.names[int(numero)]
 
 while (True):
 	print("\n\n******** MENU ********")
@@ -55,8 +57,7 @@ while (True):
 		exit()
 
 	print("Escolha o tipo de informacao que deseja utilizar para os calculos")
-	print("1 \t DEWP")
-	print("2 \t TEMP")
+	menuInformacao()
 
 	tipoDaInfor01 = scanner(sys_in).nextLine()
 
@@ -78,6 +79,7 @@ while (True):
 
 	elif(metodoCalculo == "3"):
 		print("Digite o segundo tipo de informacao")
+		menuInformacao()
 		tipoDaInfor02 = scanner(sys_in).nextLine()
 		nomeTipo1 = tipoInformacao(tipoDaInfor01)
 		nomeTipo2 = tipoInformacao(tipoDaInfor02)
