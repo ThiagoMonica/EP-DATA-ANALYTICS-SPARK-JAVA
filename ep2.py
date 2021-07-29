@@ -5,8 +5,8 @@ from py4j.java_gateway import JavaGateway
 
 
 # A implementar:
-# [] demais variaveis presentes nos aquivos (por enquanto so tem 2 DEWP e TEMP) - OK
-# [] Filtro de intervalo de datas na tabela a ser filtrada
+# [V] demais variaveis presentes nos aquivos (por enquanto so tem 2 DEWP e TEMP)
+# [V] Filtro de intervalo de datas na tabela a ser filtrada
 # [] Grafico todo maluco ( isso fudeu pq eu n faco a menor ideia)
 # [] Como o resultado sera agrupado ( dias, meses, anos) ?
 # [] Mais formas de calculos estatisticos - opcional (se sobrar tempo)
@@ -61,20 +61,38 @@ while (True):
 
 	tipoDaInfor01 = scanner(sys_in).nextLine()
 
+
+	condition = True
+	while(condition):
+		print("Digite o intervalo de datas que sera utilizado para os calculos no formato aaaa-mm-dd")
+		print("Por exemplo 20/05/2021 deverá ser escrito como 2021-05-20")
+		print("Digite o limite superior (data maior): ")
+		dataMaior = scanner(sys_in).nextLine()
+
+		print("Digite o limite inferior (data menor): ")
+		dataMenor = scanner(sys_in).nextLine()
+
+		if(dataMaior>dataMenor):
+			condition = False
+		else:
+			print("Você digitou um limite inferior maior que o limite superior ")
+			print("Tente novamente \n\n")
+
+	tabelaFiltrada = df.filter((df.DATE >= dataMenor) & (df.DATE <= dataMaior))
+
 	if(metodoCalculo == "1"):
 		nomeTipo = tipoInformacao(tipoDaInfor01)
-		resultado = df.groupBy().sum(nomeTipo).collect()[0][0] / df.count()
+		resultado = tabelaFiltrada.groupBy().sum(nomeTipo).collect()[0][0] / tabelaFiltrada.count()
 		print("\n\nO resultado da media para o atributo", nomeTipo, "foi: \n", resultado, "\n")
 
 	elif(metodoCalculo == "2"):
 		nomeTipo = tipoInformacao(tipoDaInfor01)
-		media = df.groupBy().sum(nomeTipo).collect()[0][0] / df.count()
+		media = tabelaFiltrada.groupBy().sum(nomeTipo).collect()[0][0] / tabelaFiltrada.count()
 
 		# Campo do tipo que sera utilizado
-		variavelTipo = "df." + nomeTipo
-
-		tabelaFill = df.select(df.DATE, eval(variavelTipo), ((eval(variavelTipo) - media)*(eval(variavelTipo) - media)).alias('aux'))
-		resultado = (tabelaFill.groupBy().sum("aux").collect()[0][0]/ (df.count()-1)) ** 0.5
+		variavelTipo = "tabelaFiltrada." + nomeTipo
+		tabelaFill = tabelaFiltrada.select(tabelaFiltrada.DATE, eval(variavelTipo), ((eval(variavelTipo) - media)*(eval(variavelTipo) - media)).alias('aux'))
+		resultado = (tabelaFill.groupBy().sum("aux").collect()[0][0]/ (tabelaFiltrada.count()-1)) ** 0.5
 		print("\n\nO resultado do desvio padrao para o atributo", nomeTipo, "foi: \n", resultado, "\n")
 
 	elif(metodoCalculo == "3"):
@@ -84,13 +102,13 @@ while (True):
 		nomeTipo1 = tipoInformacao(tipoDaInfor01)
 		nomeTipo2 = tipoInformacao(tipoDaInfor02)
 
-		mediax = df.groupBy().sum(nomeTipo1).collect()[0][0] / df.count() 
-		mediay = df.groupBy().sum(nomeTipo2).collect()[0][0] / df.count() 
+		mediax = tabelaFiltrada.groupBy().sum(nomeTipo1).collect()[0][0] / tabelaFiltrada.count() 
+		mediay = tabelaFiltrada.groupBy().sum(nomeTipo2).collect()[0][0] / tabelaFiltrada.count() 
 
-		variavelTipo1 = "df." + nomeTipo1
-		variavelTipo2 = "df." + nomeTipo2
+		variavelTipo1 = "tabelaFiltrada." + nomeTipo1
+		variavelTipo2 = "tabelaFiltrada." + nomeTipo2
 
-		tabelaCalc = df.select(eval(variavelTipo1), (eval(variavelTipo1)*(eval(variavelTipo2)-mediay)).alias('aux = xi(yi-mediay)'), eval(variavelTipo2), (eval(variavelTipo1)*(eval(variavelTipo1)-mediax)).alias('aux = xi(xi-mediax)'))
+		tabelaCalc = tabelaFiltrada.select(eval(variavelTipo1), (eval(variavelTipo1)*(eval(variavelTipo2)-mediay)).alias('aux = xi(yi-mediay)'), eval(variavelTipo2), (eval(variavelTipo1)*(eval(variavelTipo1)-mediax)).alias('aux = xi(xi-mediax)'))
 		b = tabelaCalc.groupBy().sum("aux = xi(yi-mediay)").collect()[0][0] / tabelaCalc.groupBy().sum("aux = xi(xi-mediax)").collect()[0][0]
 		a = mediay - b * mediax
 
