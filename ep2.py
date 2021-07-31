@@ -3,6 +3,9 @@ from pyspark.sql import column
 from pyspark.sql.session import SparkSession
 from py4j.java_gateway import JavaGateway
 import matplotlib.pyplot as plt
+import matplotlib.dates as pldates
+import matplotlib.ticker as plticker
+import numpy as np
 
 
 # A implementar:
@@ -78,12 +81,17 @@ def plotGrafico(tabela, coluna):
 	if(escolhaGrafico=="1"):
 		pandasDF = tabela.toPandas()
 
-		plt.figure()
-		plt.plot(pandasDF['DATE'], pandasDF[coluna], 'g', label = "TEMP")
-		plt.axhline(y=pandasDF[coluna].mean(), color="red", label="Media")
-		plt.axhspan(pandasDF[coluna].mean() - pandasDF[coluna].std(), pandasDF[coluna].mean() + pandasDF[coluna].std(), facecolor='lavender', alpha=0.5)
+		fig, ax = plt.subplots()
+		#plt.figure()
+		ax.plot(pandasDF['DATE'], pandasDF[coluna], 'g', label = coluna)
+		plt.axhline(y=pandasDF[coluna].mean(), color="red", label="Média")
+		plt.axhspan(pandasDF[coluna].mean() - pandasDF[coluna].std(), pandasDF[coluna].mean() + pandasDF[coluna].std(), facecolor='lavender', alpha=0.5, label="Desvio Padrão")
+		plt.title("Estatísticas de " + coluna)
+		#loc = plticker.MultipleLocator(base=20) # this locator puts ticks at regular intervals
+		ax.xaxis.set_major_locator(plt.MaxNLocator(10))
 		plt.xlabel('DATE')
 		plt.ylabel(coluna)
+		plt.legend()
 		plt.show()
 		return
 
@@ -157,12 +165,14 @@ while (True):
 		pandasDF = tabelaFiltrada.toPandas()
 
 		plt.figure()
-		plt.plot(pandasDF[nomeTipo1], a + (b*pandasDF[nomeTipo1]), 'g', label = "fitted curve")
-		plt.axhline(y=y0, color="red", linestyle="--", label="Y0")
-		plt.axhline(y=y1, color="red", linestyle="--", label="Y1")
-		plt.scatter(pandasDF[nomeTipo1], pandasDF[nomeTipo2], label = "data")
+		plt.plot(pandasDF[nomeTipo1], a + (b*pandasDF[nomeTipo1]), 'g', label = "Reta Regressão")
+		plt.axhline(y=y0, color="red", linestyle="--", label="Y0 (min)")
+		plt.axhline(y=y1, color="purple", linestyle="--", label="Y1 (max)")
+		plt.scatter(pandasDF[nomeTipo1], pandasDF[nomeTipo2], label = "Dados")
+		plt.title("Regressão Linear - " + nomeTipo1)
 		plt.xlabel(nomeTipo1)
 		plt.ylabel(nomeTipo2)
+		plt.legend()
 		plt.show()
 
 		plotGrafico(tabelaFiltrada, nomeTipo1)
